@@ -1,0 +1,100 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "Manual Trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "sheetId": "PASTE_YOUR_SHEET_ID_HERE",
+        "range": "Sheet1!A:C",
+        "returnAll": true
+      },
+      "id": "Google Sheets",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [400, 300],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1
+      },
+      "id": "Split In Batches",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "to",
+              "value": "={{$json[\"email\"]}}"
+            },
+            {
+              "name": "subject",
+              "value": "Application for Software Developer Role"
+            },
+            {
+              "name": "body",
+              "value": "Hi {{$json[\"name\"] || \"Hiring Team\"}},\n\nI hope you’re doing well. I’m writing to apply for a Software Developer role at {{$json[\"company\"] || \"your organization\"}}.\n\nI have experience in full-stack development, backend APIs, automation workflows, and building scalable systems. I would love the opportunity to contribute to your team.\n\nResume: YOUR_RESUME_LINK\n\nBest regards,\nNaveen Kumar"
+            }
+          ]
+        }
+      },
+      "id": "Set Email Content",
+      "name": "Set Email Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [800, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "={{$json[\"to\"]}}",
+        "subject": "={{$json[\"subject\"]}}",
+        "message": "={{$json[\"body\"]}}"
+      },
+      "id": "Gmail",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{ "node": "Google Sheets", "type": "main", "index": 0 }]]
+    },
+    "Google Sheets": {
+      "main": [[{ "node": "Split In Batches", "type": "main", "index": 0 }]]
+    },
+    "Split In Batches": {
+      "main": [[{ "node": "Set Email Content", "type": "main", "index": 0 }]]
+    },
+    "Set Email Content": {
+      "main": [[{ "node": "Send Email", "type": "main", "index": 0 }]]
+    }
+  }
+}
